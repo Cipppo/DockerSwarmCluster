@@ -1,0 +1,51 @@
+# Modificato da Vic 2023-05-24
+# Al momento, questo script configura i prerequisiti per Docker Swarm.
+# Non dispiega il master e i worker
+# Non dispiega Docker Registry
+
+## Variabili
+VAGRANTFILE_VERSION = "2"
+# BASEBOX = "ubuntu/xenial64"
+BASEBOX = "debian/bullseye64"
+MEMORY = "512"
+CPUS = 2
+INTERNAL_MANAGER_IP = "10.133.7.101"
+WORKERS = 2
+# Aggiungo l'ultima (terza) cifra per formare l'IP
+INTERNAL_WORKER_IP = "10.133.7.11"
+
+######################################### 
+
+## Scripts
+# Install Docker Script with convenience script
+$install_docker_script = <<SCRIPT
+  # Inserisci qui lo script di installazione di Docker
+SCRIPT
+
+######################################### 
+
+# Configurazione di Vagrant
+Vagrant.configure(VAGRANTFILE_VERSION) do |config|
+  config.vm.box = BASEBOX
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = MEMORY
+    vb.cpus = CPUS
+  end
+
+  # Manager Node
+  config.vm.define "manager" do |manager|
+    manager.vm.network "private_network", ip: INTERNAL_MANAGER_IP
+    manager.vm.hostname = "manager"
+    manager.vm.provision "shell", inline: $install_docker_script
+  end
+
+  # Worker Nodes
+  (1..WORKERS).each do |i|
+    config.vm.define "worker#{i}" do |worker|
+      worker.vm.network "private_network", ip: "#{INTERNAL_WORKER_IP}#{i}"
+      worker.vm.hostname = "worker#{i}"
+      worker.vm.provision "shell", inline: $install_docker_script
+    end
+  end
+end
