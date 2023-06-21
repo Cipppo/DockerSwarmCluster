@@ -1,0 +1,72 @@
+---
+- name: Install Docker on Debian Bullseye
+  hosts: all
+  become: true
+  vars:
+    swarm_manager: "10.133.7.101"  # Indirizzo IP del nodo manager
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      tags: [apt]
+
+    - name: Install required packages
+      apt:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg2
+          - software-properties-common
+      tags: [apt]
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/debian/gpg
+        state: present
+      tags: [docker]
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable"
+        state: present
+      tags: [docker]
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      tags: [apt]
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+      tags: [docker]
+
+    - name: Add current user to the docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      tags: [docker]
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      tags: [docker]
+
+    - name: Initialize Docker Swarm on the manager node
+      shell: docker swarm init --advertise-addr {{ swarm_manager }}
+      register: swarm_output
+      changed_when: false
+      failed_when: "not ('Swarm initialized' in swarm_output.stdout or 'This node joined a swarm' in swarm_output.stdout)"
+      when: inventory_hostname == 'manager_machine'
+      tags: [swarm]
+
+    - name: Join worker nodes to the Swarm
+      shell: "{{ hostvars['manager_machine'].swarm_output.stdout_lines[:-1] }}"
+      when: inventory_hostname != 'manager_machine' and "'Swarm initialized' in hostvars['manager_machine'].swarm_output.stdout"
+      tags: [swarm]
