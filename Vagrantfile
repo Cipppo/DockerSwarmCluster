@@ -59,8 +59,8 @@ Vagrant.configure(VAGRANTFILE_VERSION) do |config|
   config.vm.define "manager" do |manager|
     manager.vm.network "private_network", ip: INTERNAL_MANAGER_IP
     manager.vm.hostname = "manager"
-    manager.vm.provision "shell", inline: $install_docker_script
-    manager.vm.provision "shell", inline: $init_swarm_script
+    #manager.vm.provision "shell", inline: $install_docker_script
+    #manager.vm.provision "shell", inline: $init_swarm_script
   end
 
   # Worker Nodes
@@ -68,7 +68,7 @@ Vagrant.configure(VAGRANTFILE_VERSION) do |config|
     config.vm.define "worker#{i}" do |worker|
       worker.vm.network "private_network", ip: "#{INTERNAL_WORKER_IP}#{i}"
       worker.vm.hostname = "worker#{i}"
-      worker.vm.provision "shell", inline: $install_docker_script
+      #worker.vm.provision "shell", inline: $install_docker_script
     end
   end
 end
