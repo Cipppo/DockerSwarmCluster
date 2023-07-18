@@ -19,6 +19,7 @@
           - curl
           - gnupg2
           - software-properties-common
+          - python3-pip
       tags: [apt]
 
     - name: Add Docker GPG key
@@ -86,3 +87,42 @@
       shell: docker swarm join --token {{ join_token }} {{ swarm_manager_ip }}
       when: inventory_hostname != 'manager_machine' and not ('This node is already part of a swarm.')
       tags: [swarm_machines_join]
+
+    - name: Install JSondiff
+      pip:
+        name:
+          - jsondiff
+          - pyyaml
+        state: present
+      when: inventory_hostname == 'manager_machine'
+      tags: [install_pip_packages]
+
+
+
+
+- name: Deploy the stack
+  hosts: manager_machine
+  become: true
+  vars:
+    nginx_files_path: "/home/vagrant/webApp"
+    manager_home_path: "/home/vagrant"
+  tasks:
+    - name: Copy the Stack file 
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/docker-stack.yml
+        dest: /home/vagrant/docker-stack.yml
+      tags: [distribute_stack]
+
+    - name: Copy the webApp folder
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/webApp
+        dest: /home/vagrant/
+      tags: [distribute_stack]
+
+    - name: Distribute Docker Stack
+      docker_stack:
+        name: docker-stack
+        state: present
+        compose:
+          - ./docker-stack.yml
+      tags: [distribute_stack]
