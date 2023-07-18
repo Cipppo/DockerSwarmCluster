@@ -3,8 +3,8 @@
   hosts: all
   become: true
   vars:
-    swarm_manager: "10.133.7.101"  # Indirizzo IP del nodo manager
-
+    swarm_manager_ip: "10.133.7.101:2377"  # Indirizzo IP del nodo manager
+    swarm_manager_port: "2377"
   tasks:
     - name: Update apt cache
       apt:
@@ -59,14 +59,30 @@
       tags: [docker]
 
     - name: Initialize Docker Swarm on the manager node
-      shell: docker swarm init --advertise-addr {{ swarm_manager }}
+      shell: docker swarm init --advertise-addr {{ swarm_manager_ip }}
       register: swarm_output
       changed_when: false
-      failed_when: "not ('Swarm initialized' in swarm_output.stdout or 'This node joined a swarm' in swarm_output.stdout)"
-      when: inventory_hostname == 'manager_machine'
+      #failed_when: "not ('Swarm initialized' in swarm_output.stdout or 'This node joined a swarm' in swarm_output.stdout)"
+      when: inventory_hostname == 'manager_machine' and not ('Swarm initialized' in swarm_output.stdout or 'This node joined a swarm' in swarm_output.stdout)
       tags: [swarm]
 
+    - name: Retrieve Docker Swarm Join Token  
+      shell: docker swarm join-token -q manager 
+      register: join_id
+      when: inventory_hostname == 'manager_machine'
+      tags: [join_token]
+
+    - name: Print the join_token
+      debug:
+        var: join_id.stdout_lines
+      tags: [join_token]
+
+    - name: Salvare il valore in un'altra variabile
+      set_fact:
+        join_token: join_id.stdout
+      tags: [join_token]
+
     - name: Join worker nodes to the Swarm
-      shell: "{{ hostvars['manager_machine'].swarm_output.stdout_lines[:-1] }}"
-      when: inventory_hostname != 'manager_machine' and "'Swarm initialized' in hostvars['manager_machine'].swarm_output.stdout"
-      tags: [swarm]
+      shell: docker swarm join --token {{ join_token }} {{ swarm_manager_ip }}
+      when: inventory_hostname != 'manager_machine' and not ('This node is already part of a swarm.')
+      tags: [swarm_machines_join]
