@@ -4,7 +4,7 @@ services:
   nginx:
     image: nginx:latest
     deploy:
-      replicas: 3
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 10s
@@ -13,4 +13,4 @@ services:
     ports:
       - 80:80
     volumes:
-      - /home/vagrant/webApp:/usr/share/nginx/html
+      - /home/vagrant/webApp/:/usr/share/nginx/html/
