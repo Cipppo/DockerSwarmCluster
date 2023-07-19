@@ -61,10 +61,9 @@
 
     - name: Initialize Docker Swarm on the manager node
       shell: docker swarm init --advertise-addr {{ swarm_manager_ip }}
-      register: swarm_output
       changed_when: false
       #failed_when: "not ('Swarm initialized' in swarm_output.stdout or 'This node joined a swarm' in swarm_output.stdout)"
-      when: inventory_hostname == 'manager_machine' and not ('Swarm initialized' in swarm_output.stdout or 'This node joined a swarm' in swarm_output.stdout)
+      when: inventory_hostname == 'manager_machine' 
       tags: [swarm]
 
     - name: Retrieve Docker Swarm Join Token  
@@ -113,6 +112,12 @@
         dest: /home/vagrant/docker-stack.yml
       tags: [distribute_stack]
 
+    - name: Remove the webApp folder
+      file:
+        path: /home/vagrant/webApp
+        state: absent
+      tags: [distribute_stack]
+
     - name: Copy the webApp folder
       copy:
         src: /home/c1pp0/Desktop/DockerSwarmCluster/webApp
@@ -126,3 +131,43 @@
         compose:
           - ./docker-stack.yml
       tags: [distribute_stack]
+
+
+- name: Refresh the stack
+  hosts: manager_machine
+  become: true
+  vars:
+    nginx_files_path: "/home/vagrant/webApp"
+    manager_home_path: "/home/vagrant"
+  tasks:
+    - name: Copy the Stack file 
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/docker-stack.yml
+        dest: /home/vagrant/docker-stack.yml
+      tags: [refresh_stack]
+
+    - name: Remove the webApp folder
+      file:
+        path: /home/vagrant/webApp
+        state: absent
+      tags: [refresh_stack]
+
+    - name: Copy the webApp folder
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/webApp
+        dest: /home/vagrant/
+      tags: [refresh_stack]
+
+    - name: Remove the old Service 
+      shell: docker service rm docker-stack_nginx
+      tags: [refresh_stack]
+
+    - name: Distribute Docker Stack
+      docker_stack:
+        name: docker-stack
+        state: present
+        compose:
+          - ./docker-stack.yml
+      tags: [refresh_stack]
+
+
