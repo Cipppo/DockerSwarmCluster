@@ -1,0 +1,10 @@
+Cose da fare
+
+Sistemare il playbook in modo da avere:
+    1 Una serie di istruzioni per fare il setup di NFS
+    2 Una serie di istruzioni per andare a mettere giu tutti i file necessari
+    3 Una serie di istruzioni per far partire il cluster
+    4 Una serie di istruzioni per spegnere il cluster
+    5 una serie di istruzioni per eliminare i file necessari
+
+Dare una guardata al perche non va nginx

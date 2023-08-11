@@ -10,7 +10,7 @@ bytes_choose_label.innerHTML = "Hai selezionato " + inputSlider.value + " cifre.
 
 
 function sendRequest(n){
-    const url = `http://localhost:5000/getString/${n}`
+    const url = `http://10.133.7.101:5000/getString/${n}`
 
     axios.get(url)
     .then(result => generated_number.innerHTML = result.data["res"])

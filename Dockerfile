@@ -6,8 +6,9 @@ WORKDIR /webserver
 COPY ./server.py /webserver
 
 RUN pip install flask
+RUN pip install -U flask_cors
 
-RUN pip install Flask-Cors
+EXPOSE 5000
 
 # Avvia il server Flask
 CMD ["python", "server.py"]

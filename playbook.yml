@@ -99,6 +99,57 @@
       tags: [install_pip_packages]
 
 
+### FARE PARTE SETUP NFS
+
+
+
+- name: Erase FileSystem
+  hosts: manager_machine
+  become: true
+  tasks: 
+    - name: Remove the webApp folder
+      file:
+        path: /nfs_shared/webApp
+        state: absent
+      tags: [erase_filesystem]
+    - name: Remove the server folder
+      file:
+        path: /nfs_shared/server
+        state: absent
+      tags: [erase_filesystem]
+    - name: Remove the Stack File
+      file:
+        path: /home/vagrant/docker-stack.yml
+        state: absent
+        tags: [erase_filesystem]
+
+- name: Setup FileSystem
+  hosts: manager_machine
+  become: true
+  tasks:
+    - name: Copy Stack File
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/docker-stack.yml
+        dest: /home/vagrant/docker-stack.yml
+      tags: [setup_filesystem]
+
+    - name: Copy WebApp Folder
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/webApp
+        dest: /nfs_shared
+      tags: [setup_filesystem]
+    
+    - name: Create the nfsSharedserverFolder
+      file:
+        path: /nfs_shared/server
+        state: directory
+      tags: [setup_filesystem]
+
+    - name: Copy the server
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/server.py
+        dest: /nfs_shared/server
+      tags: [setup_filesystem] 
 
 
 - name: Deploy the stack
@@ -108,55 +159,13 @@
     nginx_files_path: "/home/vagrant/webApp"
     manager_home_path: "/home/vagrant"
   tasks:
-    - name: Copy the Stack file 
-      copy:
-        src: /home/c1pp0/Desktop/DockerSwarmCluster/docker-stack.yml
-        dest: /home/vagrant/docker-stack.yml
-      tags: [distribute_stack]
-
-    - name: Remove the webApp folder
-      file:
-        path: /home/vagrant/webApp
-        state: absent
-      tags: [distribute_stack]
-
-    - name: Copy the webApp folder
-      copy:
-        src: /home/c1pp0/Desktop/DockerSwarmCluster/webApp
-        dest: /home/vagrant/
-      tags: [distribute_stack]
-
-    - name: Remove the webApp folder
-      file:
-        path: /nfs_shared/webApp
-        state: absent
-      tags: [distribute_stack]
-
-    - name: Copy the webApp folder
-      copy:
-        src: /home/c1pp0/Desktop/DockerSwarmCluster/webApp
-        dest: /nfs_shared
-      tags: [distribute_stack]
-
-    - name: Remove the server folder
-      file:
-        path: /home/vagrant/server.py
-        state: absent
-      tags: [distribute_stack]
-    
-    - name: Copy the server folder
-      copy:
-        src: /home/c1pp0/Desktop/DockerSwarmCluster/server.py
-        dest: /home/vagrant/
-      tags: [distribute_stack]
-
     - name: Distribute Docker Stack
       docker_stack:
         name: docker-stack
         state: present
         compose:
           - ./docker-stack.yml
-      tags: [distribute_stack]
+      tags: [deploy_stack]
 
 
 - name: Refresh the stack
