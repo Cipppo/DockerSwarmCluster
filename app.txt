@@ -1,6 +1,0 @@
-Aggiungere a tutti i nodi tutti i file in modo che tutti mappano sulle immagini in cui potrebbero partire
-
-
-Ceph consistente ma difficile 
-Avendo solo biosgno di avere qualcosa in lettura, cercare qualcosa di piu semplice 
-

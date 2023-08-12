@@ -7,13 +7,20 @@ let button = document.getElementById("generate_number")
 let generated_number = document.getElementById("generated_number")
 bytes_choose_label.innerHTML = "Hai selezionato " + inputSlider.value + " cifre." 
 
-
+retrieveMaxBits()
 
 function sendRequest(n){
     const url = `http://10.133.7.101:5000/getString/${n}`
 
     axios.get(url)
     .then(result => generated_number.innerHTML = result.data["res"])
+}
+
+function retrieveMaxBits(){
+    const url = `http://10.133.7.101:5000/getMaxBits`
+
+    axios.get(url)
+    .then(result => inputSlider.max = result.data["res"])
 }
 
 inputSlider.addEventListener("change", function(e){
