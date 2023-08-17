@@ -99,8 +99,44 @@
       tags: [install_pip_packages]
 
 
-### FARE PARTE SETUP NFS
+- name: Install and Setup NFS on host
+  hosts: manager_machine
+  become: true
+  tasks:
+    - name: Download components
+      apt:
+        name:
+          - nfs-kernel-server
+      tags: [setup_nfs_host]
+    - name: Create shared directory
+      shell: "sudo mkdir /nfs_shared -p"
+      tags: [setup_nfs_host]
+    - name: Change directory group
+      shell: "sudo chown nobody:nogroup /nfs_shared"
+      tags: [setup_nfs_host]
+    - name: Copy the exports file
+      copy:
+        src: /home/c1pp0/Desktop/DockerSwarmCluster/exports
+        dest: /etc/exports
+      tags: [setup_nfs_host]
+    - name: Restart nfs service 
+      shell: "sudo systemctl restart nfs-kernel-server"
+      tags: [setup_nfs_host]
 
+- name: Install nfs on workers
+  hosts: workers
+  tasks:  
+  - name: Download components
+    apt:
+      name:
+        - nfs-common
+      tags: [setup_nfs_wk]
+  - name: Creating mount point
+    shell: "sudo mkdir -p /nfs_shared"
+    tags: [setup_nfs_wk]
+  - name: Creating mpunt directory
+    shell: "sudo mount 10.133.7.101/nfs_shared /nfs_shared"
+    tags: [setup_nfs_wk]    
 
 
 - name: Erase FileSystem
